@@ -1,126 +1,50 @@
+import { Context } from "../../context";
 import AppFilter from "../app-filter/appFilter";
 import AppInfo from "../app-info/appInfo";
 import MovieList from "../movie-list/movieList";
 import MoviesAddForm from "../movies-add-form/movieAddForm";
 import SearchPanel from "../search-panel/searchPanel";
 import "./App.css";
-import { Component } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useContext, useEffect, useState } from "react";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      data: [
-        {
-          id: 1,
-          name: "Slova patsana",
-          favourite: true,
-          like: true,
-          viewCount: 456,
-        },
-        {
-          id: 2,
-          name: "Oytovoq va Oyqarg'a",
+const App = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { dispatch } = useContext(Context);
+
+  useEffect(() => {
+    console.log("ishadfi");
+    setIsLoading(true);
+    fetch("https://jsonplaceholder.typicode.com/todos?_start=0&_limit=5")
+      .then((response) => response.json())
+      .then((json) => {
+        const newArr = json.map((item) => ({
+          name: item.title,
+          id: item.id,
           favourite: false,
           like: false,
-          viewCount: 876,
-        },
-        {
-          id: 3,
-          name: "Kalish kiygan mushuk",
-          favourite: false,
-          like: false,
-          viewCount: 998,
-        },
-      ],
-      term: "",
-      filter: "all",
-    };
-  }
+          viewCount: Math.floor(Math.random() * (1000 - 100 + 1) + 100),
+        }));
+        dispatch({ type: "GET_DATA", payload: newArr });
+      })
+      .catch((error) => console.log(error))
+      .finally(() => setIsLoading(false));
+  }, [dispatch]);
 
-  onToggleProp = (id, prop) => {
-    this.setState(({ data }) => ({
-      data: data.map((item) => {
-        if (item.id === id) {
-          return { ...item, [prop]: !item[prop] };
-        }
-        return item;
-      }),
-    }));
-  };
-
-  addForm = (item) => {
-    const newItem = {
-      name: item.name,
-      viewCount: item.viewCount,
-      favourite: false,
-      like: false,
-      id: uuidv4(),
-    };
-    this.setState(({ data }) => ({
-      data: [...data, newItem],
-    }));
-  };
-
-  onDelete = (id) => {
-    this.setState(({ data }) => ({ data: data.filter((c) => c.id !== id) }));
-  };
-
-  searchHandler = (arr, term) => {
-    if (term.length === 0) {
-      return arr;
-    }
-    return arr.filter((item) => item.name.toLowerCase().indexOf(term) > -1);
-  };
-
-  updateTermHandler = (term) => {
-    this.setState({ term });
-  };
-
-  filterHandler = (arr, filter) => {
-    switch (filter) {
-      case "popular":
-        return arr.filter((c) => c.like);
-      case "mostViewed":
-        return arr.filter((c) => c.viewCount > 800);
-      default:
-        return arr;
-    }
-  };
-
-  updateFilterHandler = (filter) => this.setState({ filter });
-
-  render() {
-    const { data, term, filter } = this.state;
-    const allMoviesCount = data.length;
-    const favouriteMoviesCount = data.filter((c) => c.favourite).length;
-
-    const visibleData = this.filterHandler(
-      this.searchHandler(data, term),
-      filter
-    );
-    return (
-      <div className="app font-monospace">
-        <div className="content">
-          <AppInfo
-            allMoviesCount={allMoviesCount}
-            favouriteMoviesCount={favouriteMoviesCount}
-          />
-          <div className="search-panel">
-            <SearchPanel updateTermHandler={this.updateTermHandler} />
-            <AppFilter filter={filter} updateFilterHandler={this.updateFilterHandler}/>
-          </div>
-          <MovieList
-            data={visibleData}
-            onToggleProp={this.onToggleProp}
-            onDelete={this.onDelete}
-          />
-          <MoviesAddForm addForm={this.addForm} />
+  return (
+    <div className="app font-monospace">
+      <div className="content">
+        <AppInfo />
+        <div className="search-panel">
+          <SearchPanel />
+          <AppFilter />
         </div>
+        {isLoading && <h1 className="text-center my-5">Loading...</h1>}
+        <MovieList />
+        <MoviesAddForm />
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default App;
