@@ -1,21 +1,21 @@
 import "./movieList.css";
 import MovieListItem from "../movie-list-item/movieListItem.js";
+import { useContext } from "react";
+import { Context } from "../../context/index.js";
+import { filterHandler, searchHandler } from "../../utilities/data.js";
 
-const MovieList = ({ data, onToggleProp, onDelete }) => {
+const MovieList = () => {
+  const { state } = useContext(Context);
+
+  const data = filterHandler(
+    searchHandler(state.data, state.term),
+    state.filter
+  );
+
   return (
     <ul className="movie-list">
       {data.map((item) => (
-        <MovieListItem
-          key={item.id}
-          name={item.name}
-          viewCount={item.viewCount}
-          favourite={item.favourite}
-          like={item.like}
-          onToggleProp={(e) =>
-            onToggleProp(item.id, e.currentTarget.getAttribute("data-toggle"))
-          }
-          onDelete={() => onDelete(item.id)}
-        />
+        <MovieListItem key={item.id} {...item} />
       ))}
     </ul>
   );
